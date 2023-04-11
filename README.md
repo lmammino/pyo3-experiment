@@ -1,4 +1,4 @@
-# py03-experiment
+# pyo3-experiment
 
 ## Advent of Code 2022 Day 19 Solution in Rust and Python
 
