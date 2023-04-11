@@ -42,7 +42,7 @@ impl State {
     }
 }
 
-/// Formats the sum of two numbers as string.
+/// Simulate extraction
 #[pyfunction]
 fn run_blueprint(blueprint: &PyDict, time_limit: u32) -> PyResult<u32> {
     let bp_ore_ore: u32 = blueprint
@@ -59,28 +59,28 @@ fn run_blueprint(blueprint: &PyDict, time_limit: u32) -> PyResult<u32> {
         .unwrap()
         .extract()
         .unwrap();
-    let bp_o_o: u32 = blueprint
+    let bp_obs_ore: u32 = blueprint
         .get_item("obsidian")
         .unwrap()
         .get_item("ore")
         .unwrap()
         .extract()
         .unwrap();
-    let bp_o_c: u32 = blueprint
+    let bp_obs_clay: u32 = blueprint
         .get_item("obsidian")
         .unwrap()
         .get_item("clay")
         .unwrap()
         .extract()
         .unwrap();
-    let bp_gore: u32 = blueprint
+    let bp_geo_ore: u32 = blueprint
         .get_item("geode")
         .unwrap()
         .get_item("ore")
         .unwrap()
         .extract()
         .unwrap();
-    let bp_go: u32 = blueprint
+    let bp_geo_obs: u32 = blueprint
         .get_item("geode")
         .unwrap()
         .get_item("obsidian")
@@ -88,9 +88,7 @@ fn run_blueprint(blueprint: &PyDict, time_limit: u32) -> PyResult<u32> {
         .extract()
         .unwrap();
 
-    let max_ore = bp_ore_ore.max(bp_clay_ore).max(bp_o_o).max(bp_gore);
-    let max_clay = bp_o_c;
-    let max_obsidian = bp_go;
+    let max_ore = bp_ore_ore.max(bp_clay_ore).max(bp_obs_ore).max(bp_geo_ore);
 
     let mut stack: VecDeque<State> = VecDeque::new();
     stack.push_back(State {
@@ -159,7 +157,7 @@ fn run_blueprint(blueprint: &PyDict, time_limit: u32) -> PyResult<u32> {
         }
 
         // clay robot
-        if bp_clay_ore <= state.resources_ore && state.robots_clay < max_clay {
+        if bp_clay_ore <= state.resources_ore && state.robots_clay < bp_obs_clay {
             stack.push_back(State::new(
                 state.robots_ore,
                 state.robots_clay+1,
@@ -174,16 +172,16 @@ fn run_blueprint(blueprint: &PyDict, time_limit: u32) -> PyResult<u32> {
         }
 
         //obsidian robot
-        if bp_o_o <= state.resources_ore
-            && bp_o_c <= state.resources_clay
-            && state.robots_obsidian < max_obsidian {
+        if bp_obs_ore <= state.resources_ore
+            && bp_obs_clay <= state.resources_clay
+            && state.robots_obsidian < bp_geo_obs {
             stack.push_back(State::new(
                 state.robots_ore,
                 state.robots_clay,
                 state.robots_obsidian+1,
                 state.robots_geode,
-                state.robots_ore + state.resources_ore- bp_o_o,
-                state.robots_clay + state.resources_clay- bp_o_c,
+                state.robots_ore + state.resources_ore- bp_obs_ore,
+                state.robots_clay + state.resources_clay- bp_obs_clay,
                 state.robots_obsidian + state.resources_obsidian,
                 state.robots_geode + state.resources_geode,
                 state.timer + 1,
@@ -191,15 +189,15 @@ fn run_blueprint(blueprint: &PyDict, time_limit: u32) -> PyResult<u32> {
         }
 
         //geode robot
-        if bp_gore <= state.resources_ore && bp_go <= state.resources_obsidian {
+        if bp_geo_ore <= state.resources_ore && bp_geo_obs <= state.resources_obsidian {
             stack.push_back(State::new(
                 state.robots_ore,
                 state.robots_clay,
                 state.robots_obsidian,
                 state.robots_geode+1,
-                state.robots_ore + state.resources_ore-bp_gore,
+                state.robots_ore + state.resources_ore-bp_geo_ore,
                 state.robots_clay + state.resources_clay,
-                state.robots_obsidian + state.resources_obsidian- bp_go,
+                state.robots_obsidian + state.resources_obsidian- bp_geo_obs,
                 state.robots_geode + state.resources_geode,
                 state.timer + 1,
             ));

@@ -41,34 +41,17 @@ def parser(s):
             line,
             re.I | re.S,
         )[0]
-        # print(parsed_line)
-        d = {}
-        inside = {}
-        inside["ore"] = int(parsed_line[1])
-        d["ore"] = inside
-        inside = {}
-        inside["ore"] = int(parsed_line[4])
-        d["clay"] = inside
-        inside = {}
-        inside["ore"] = int(parsed_line[7])
-        inside["clay"] = int(parsed_line[9])
-        d["obsidian"] = inside
-        inside = {}
-        inside["ore"] = int(parsed_line[12])
-        inside["obsidian"] = int(parsed_line[14])
-        d["geode"] = inside
-
-        ret.append(d)
-        # ret.append(
-        #     {
-        #         'ore': {'ore': int(parsed_line[1])},
-        #         'clay': {'ore': int(parsed_line[4])},
-        #         'obsidian': {'ore': int(parsed_line[7]),
-        #                      'clay': int(parsed_line[9])},
-        #         'geode': {'ore': int(parsed_line[12]),
-        #                      'obsidian': int(parsed_line[14])},
-        #     }
-        # )
+        ret.append(
+            {
+                "ore": {"ore": int(parsed_line[1])},
+                "clay": {"ore": int(parsed_line[4])},
+                "obsidian": {"ore": int(parsed_line[7]), "clay": int(parsed_line[9])},
+                "geode": {
+                    "ore": int(parsed_line[12]),
+                    "obsidian": int(parsed_line[14]),
+                },
+            }
+        )
     return ret
 
 
@@ -197,31 +180,35 @@ def run_blueprint(bp, time_limit=24):
     return ret_max
 
 
-print("plain")
-
 from multiprocessing import Pool
 import time
 from pyo3_streaming_exercise import run_blueprint as rust_run
 
-t0 = time.monotonic()
-ret = 0
 
-def parallel_function(i_blueprint):
+def parallel_function_pure(i_blueprint):
+    i, blueprint = i_blueprint
+    n = run_blueprint(blueprint, 24)
+    print(i, n)
+    return (i + 1) * n
+
+
+def parallel_function_pyo3(i_blueprint):
     i, blueprint = i_blueprint
     n = rust_run(blueprint, 24)
     print(i, n)
     return (i + 1) * n
 
-with Pool(8) as p:
-    ret = sum(
-        p.map(parallel_function, enumerate(parser(_input)))
-    )
 
-# for i, blueprint in enumerate(parser(_input)):
-#     n = rust_run(blueprint, 24)
-#     print(i, n)
-#     ret += (i + 1) * n
+def execute(solver):
+    t0 = time.monotonic()
+    ret = 0
 
-print(time.monotonic() - t0, ret)
+    with Pool(8) as p:
+        ret = sum(p.map(solver, enumerate(parser(_input))))
 
-input()
+    print(solver.__name__, time.monotonic() - t0, ret)
+
+
+if __name__ == "__main__":
+    execute(parallel_function_pure)
+    execute(parallel_function_pyo3)
